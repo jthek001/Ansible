@@ -1,4 +1,12 @@
-—
+The Ansible playbook below is to:
+
+Create 2 web servers as F5 LTM nodes;
+Create a F5 LTM pool;
+Add the 2 web servers as the member for F5 LTM pool which is created in Step 2;
+Create a F5 LTM vIP and associate the F5 LTM pool created in Step 2 with this newly created vIP;
+
+
+
 – name: f5 config
 hosts: lb.davidwzhang.com
 connection: local
