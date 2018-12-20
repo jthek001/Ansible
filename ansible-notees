@@ -1,0 +1,4 @@
+#### run ansible ##############
+#  ansible-playbook f5-v0.4.yml
+# Like normal Ansible modules,  
+# Ansible F5 module is installed the /usr/lib/python2.7/site-packages/ansible/modules/extras/network directory.
