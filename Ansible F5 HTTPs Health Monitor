@@ -1,0 +1,62 @@
+# This version is to create a new https health monitor
+---
+- name: f5 config
+  hosts:  lb.davidwzhang.com
+  connection: local
+  vars:
+    ports:
+      - 443
+  tasks:
+    - name: creat http healthmonitor
+      bigip_monitor_https:
+        state:  "present"
+        #state: "absent"
+        name: "ansible-httpshealthmonitor"
+        password: "password"
+        server: "10.1.1.122"
+        user: "admin"
+        validate_certs: "no"
+        send: "Get /cgi-bin/env.sh HTTP/1.1\r\nHost:192.168.72.28\r\nConnection: Close\r\n"
+        receive: "web"
+        interval: "3"
+        timeout: "10"
+      delegate_to:  localhost
+      
+      
+  I tried to create another HTTPs health monitor, 
+  which includes basic authentication(admin/password) and customized alias address and alias service port(8443).
+  
+  
+  # This version is to create a new HTTP health monitor
+---
+- name: f5 config
+  hosts:  lb.davidwzhang.com
+  connection: local
+  vars:
+    ports:
+      - 443
+  tasks:
+    - name: creat http healthmonitor
+      bigip_monitor_https:
+        state:  "present"
+        #state: "absent"
+        name: "ansible-httpshealthmonitor02"
+        password: "password"
+        server: "10.1.1.122"
+        user: "admin"
+        validate_certs: "no"
+        ip: "192.168.72.128"
+        port: "8443"
+        send: "Get /cgi-bin/env.sh\r\n"
+        receive: "200"
+        interval: "3"
+        timeout: "10"
+        target_username: "admin"
+        target_password: "password"
+      delegate_to:  localhost
+      
+      
+      
+      
+      
+      
