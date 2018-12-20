@@ -1,0 +1,101 @@
+
+# https://davidwzhang.com/2017/04/25/automate-f5-gslb-with-ansible/
+
+F5 BIG-IP Global Traffic Manager (GTM) provides tiered global server load balancing (GSLB). BIG-IP GTM distributes DNS name resolution requests, first to the best available pool in a wide IP, and then to the best available virtual server within that pool. GTM selects the best available resource using either a static or a dynamic load balancing method. Using a static load balancing method, BIG-IP GTM selects a resource based on a pre-defined pattern. Using a dynamic load balancing method, BIG-IP GTM selects a resource based on current performance metrics collected by the big3d agents running in each data center.
+
+So F5 GSLB configuration logic for a DNS record is as below:
+
+Define a Data Center, e.g. “SL-SYD-Site1”;
+Define a server which can be F5 LTM or any other kind of local load balancer or host;
+GTM Server Type
+
+Create virtual servers if you don’t use F5 BigIP LTM or you don’t “Virtual Server Discovery” feature for your F5 BigIP LTM
+Create GTM pool/pools using virtual server as member of this newly created pool;
+Create Wide-IP which points to the GTM pool/pools which you defined in the previous step ; Note: F5 module in Ansible 2.3 still doesn’t support the association of GTM pool with wide-ip.
+Unlike F5 BigIP LTM, Ansible F5 module doesn’t support F5 BigIP GTM very well. The known limitation of automating F5 GSLB configuration with Ansible version 2.3 includes:
+
+Doesn’t support setting up a server; (Luckily, if you are using F5 BigIP LTM, this is one-off task: you only need to perform this task once for each LTM.)
+Doesn’t support adding pool member when you create a GTM pool;
+Doesn’t support adding pool when you create a wide ip;
+Doesn’t support health monitor when you create GTM virtual server and GTM pool;
+To accommodate these above limitation, I pre-defined a F5 LTM server called “myLTM”. 
+
+2017-04-25_164141
+
+After running my Ansible playbook, I manually add pool member into newly created GTM pool and add the GTM pool to wideip as well.
+
+GTMPool_Adding_Member
+
+GTM_WideIP_Pool
+
+My playbook YAML file:
+
+– name: f5 config
+hosts: lb.davidwzhang.com
+connection: local
+tasks:
+– name: create a GTM DC SL-SYD-Site1
+bigip_gtm_datacenter:
+password: “password”
+server: “10.1.1.122”
+user: “admin”
+name: “SL-SYD-Site1”
+validate_certs: “no”
+delegate_to: localhost
+– name: create a virtual server myVIP
+bigip_gtm_virtual_server:
+password: “password”
+server: “10.1.1.122”
+user: “admin”
+virtual_server_name: “myVIP”
+virtual_server_server: “myLTM”
+validate_certs: “no”
+port: “80”
+address: “192.168.72.199”
+state: “present”
+delegate_to: localhost
+
+– name: create GTM pool: mypool
+bigip_gtm_pool:
+server: “10.1.1.122”
+user: “admin”
+password: “password”
+name: “mypool”
+state: “present”
+type: “a”
+validate_certs: “no”
+delegate_to: localhost
+
+– name: create a wideip w3.davidwzhang.com
+bigip_gtm_wide_ip:
+server: “10.1.1.122”
+user: “admin”
+password: “password”
+lb_method: “round_robin”
+name: “w3.davidwzhang.com”
+type: “a”
+state: “present”
+validate_certs: “no”
+delegate_to: localhost
+
+Ansible Playbook Output:
+
+GTM DC
+
+GTM_DC
+
+GTM Virtual Server
+
+GTM_Server_VS
+
+GTM Pool
+
+GTM_Pool
+
+GTM WideIP
+
+GTM_WideIP
+
+NSlookup for wideip: w3.davidwzhang.com
+
+GTM_Nslookup
